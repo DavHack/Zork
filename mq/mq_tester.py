@@ -2,7 +2,7 @@ import pika, sys, time
 
 def mycallback(ch, method, properties, body):
 	print('Message received on channel {}, on method {}, with those properties: {} and with the body: {}'.format(ch, method, properties, body))
-	time.sleep(body.count(b'.'))
+	time.sleep(3)
 	ch.basic_ack(delivery_tag = method.delivery_tag)
 	print('Done')
 
@@ -24,7 +24,11 @@ def receiver(connection, channel):
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
 channel.basic_qos(prefetch_count=1)
-if sys.argv[1] == 'send':
+# TODO switch to relative script name
+if len(sys.argv) < 2:
+    print('Usage: mq_tester.py <receive/send> [what to send]')
+    sys.exit(1)
+elif sys.argv[1] == 'send':
 	publish(connection, channel, sys.argv[2])
 elif sys.argv[1] == 'receive':
 	receiver(connection, channel)
