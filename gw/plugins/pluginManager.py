@@ -27,7 +27,5 @@ def matcher(matcher_function):
 def import_plugins(path='.'):
     for filename in os.listdir(path):
         if filename.startswith('plugin_'):
-            spec = importlib.util.spec_from_file_location(filename, path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            sys.modules[module_name] = module
+            frozen_module = importlib.machinery.SourceFileLoader(filename, os.path.join(path, filename))
+            frozen_module.load_module()

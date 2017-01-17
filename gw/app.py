@@ -1,11 +1,11 @@
-import pika, time, json, hashlib, re
+import pika, time, json, hashlib, re, pdb
 from flask import Flask, request
-from plugins import pluginManager
-pluginManager.import_plugins()
+from .plugins import pluginManager
+print('Done import')
+pluginManager.import_plugins('plugins')
+print('Matchers: ', pluginManager.matchers)
 # TODO Currently the modules are reloaded only once
 app = Flask(__name__)
-print(pluginManager.matchers)
-
 SLAVE_TOKEN_REGEX = re.compile('^[a-f0-9]{32}$')
 
 def validate_client_token(request):
@@ -55,12 +55,14 @@ def slave_fetch(slave_name):
 @app.route('/submit/<slave_name>', methods=['POST'])
 def slave_submit(slave_name):
     print('Slave {} trying to submit data to server.'.format(slave_name))
-    token = validate_client_token(request),
+    token = validate_client_token(request)
     if isinstance(token, tuple):
         return token
     output = request.form.get('stdout')
     command = request.form.get('command')
-    pluginManager.reactors[command](output)
+    product = pluginManager.reactors[command](slave_name, output)
+    print(product)
+    return json.dumps({'status': 'success'}), 200
 
 
 
@@ -85,7 +87,7 @@ def rabbitmq_init():
     channel.queue_bind(exchange='log', queue='log', routing_key='info')
     channel.queue_bind(exchange='log', queue='log', routing_key='fatal')
 
-if __name__ == '__main__':
+def run_server():
     try:
         rabbitmq_init()
     except Exception as e: # Except the pika exceptio

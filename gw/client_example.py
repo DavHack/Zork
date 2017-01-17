@@ -1,6 +1,9 @@
 import requests, random, string, json, pdb
 
 
+def foo():
+    return 'foo'
+
 class Client:
     
     def __init__(self, name, host, port, version='1.0'):
@@ -22,8 +25,7 @@ class Client:
         response = requests.get(url=self.http_server + '/fetch/{name}'.format(name=self.name), data={'token': self.token})
         if response.status_code == 200:
             try:
-                self.commands += json.loads(response.text)['commands']
-                print(self.commands)
+                self.commands += [json.loads(response.text)['commands']]
                 self._execute_commands()
             except KeyError as e:
                 print('Unable to find key `commands` in response', e)
@@ -50,6 +52,7 @@ class Client:
 
     def _submit_stdout(self, response, command_name):
         response = requests.post(url=self.http_server  + '/submit/{name}'.format(name=client_name), data={'version': self.version,
+                                                                                                          'token': self.token,
                                                                                                           'stdout': response,
                                                                                                           'command': command_name})
         try:
